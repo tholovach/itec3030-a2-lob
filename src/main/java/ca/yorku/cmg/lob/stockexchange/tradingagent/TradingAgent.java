@@ -8,7 +8,7 @@ import ca.yorku.cmg.lob.trader.Trader;
 /**
  * An trading agent that receives news and reacts by submitting ask or bid orders.
  */
-public abstract class TradingAgent {
+public abstract class TradingAgent implements INewsObserver {
 	protected Trader t;
 	protected StockExchange exc;
 	protected NewsBoard news;
@@ -23,6 +23,8 @@ public abstract class TradingAgent {
 		this.t=t;
 		this.exc = e;
 		this.news = n;
+		// Register this agent as an observer with the NewsBoard
+		this.news.addObserver(this);
 	}
 	
 	/**
@@ -66,6 +68,13 @@ public abstract class TradingAgent {
 	 */
 	protected abstract void actOnEvent(Event e, int pos, int price);
 	
+	/**
+	 * Implementation of INewsObserver.update() - called when NewsBoard pushes an event
+	 */
+	@Override
+	public void update(Event e) {
+		examineEvent(e);
+	}
 	
 	
 

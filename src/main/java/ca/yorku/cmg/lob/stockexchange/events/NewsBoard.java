@@ -3,13 +3,16 @@ package ca.yorku.cmg.lob.stockexchange.events;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
 import ca.yorku.cmg.lob.security.Security;
 import ca.yorku.cmg.lob.security.SecurityList;
+import ca.yorku.cmg.lob.stockexchange.tradingagent.INewsObserver;
 
 /**
  * A NewsBoard object generates and shares financial/economic events that affect specific securities 
@@ -20,6 +23,9 @@ public class NewsBoard {
 	PriorityQueue<Event> eventQueue = new PriorityQueue<>((e1, e2) -> Long.compare(e1.getTime(), e2.getTime()));
 
 	SecurityList securities;
+	
+	// List of observers registered to receive event notifications
+	private List<INewsObserver> observers = new ArrayList<>();
 	
 	public NewsBoard(SecurityList x) {
 		this.securities = x;
@@ -113,10 +119,45 @@ public class NewsBoard {
 	
 	
 	/**
-	 * Stub for the observer part. Runs the entire queue of events and sends notifications to registered trading agents.   
+	 * Add an observer to receive event notifications
+	 * @param observer The observer to add
+	 */
+	public void addObserver(INewsObserver observer) {
+		if (!observers.contains(observer)) {
+			observers.add(observer);
+		}
+	}
+	
+	/**
+	 * Remove an observer from receiving event notifications
+	 * @param observer The observer to remove
+	 */
+	public void removeObserver(INewsObserver observer) {
+		observers.remove(observer);
+	}
+	
+	/**
+	 * Notify all registered observers about an event
+	 * @param event The event to notify observers about
+	 */
+	private void notifyObservers(Event event) {
+		for (INewsObserver observer : observers) {
+			observer.update(event);
+		}
+	}
+
+	/**
+	 * Runs the entire queue of events and sends notifications to registered trading agents.   
 	 */
 	public void runEventsList() {
-
+		// Create a copy of the event queue to avoid modifying the original
+		PriorityQueue<Event> eventsCopy = new PriorityQueue<>(eventQueue);
+		
+		// Process all events in chronological order and notify observers
+		while (!eventsCopy.isEmpty()) {
+			Event event = eventsCopy.poll();
+			notifyObservers(event);
+		}
 	}
 	
 	
